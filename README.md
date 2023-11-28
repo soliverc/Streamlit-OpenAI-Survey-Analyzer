@@ -10,7 +10,13 @@ Survey Sight is a Streamlit application designed to effortlessly analyze free-te
 - Integration with OpenAI's GPT-4 to analyze and synthesize feedback. (Will add feature to choose a specific model soon)
 - Generation of a summary including common positive/negative comments, sentiment analysis, and recommendations.
 
-## Installation
+## Check it out in action
+
+You can either check the app out right now by going to: [https://surveysight.streamlit.app/](https://surveysight.streamlit.app/)
+
+Or install it yourself below:
+
+## Installation 
 
 To run Survey Sight on your local machine, clone the repository, navigate to the project directory, and then install the requirements.
 
