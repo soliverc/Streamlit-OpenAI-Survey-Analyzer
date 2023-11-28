@@ -9,6 +9,8 @@ st.header("Powered by :blue[AI] :robot_face:",divider='rainbow')
 st.write("Upload your freetext survey responses to get a detailed summary of what" 
         " your respondents are saying. No need to read through hundreds "
         "of responses ever again!")
+url1 = "https://github.com/soliverc/Streamlit-OpenAI-Survey-Analyzer/blob/main/.testdata/anydo.csv"
+st.write("Note: If you don't currently have a dataset to play around with, you can use this. It's a collection of Google Play Store reviews for a single app. The user reviews are in the *content* column. [Here is the link](%s)" % url1)
 st.write("This only works with Excel or CSV files.")
 st.write("After uploading, you will be able to choose in which column the responses are located.")
 
