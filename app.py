@@ -5,7 +5,7 @@ st.set_page_config(page_title="Survey Sight", page_icon= ":bar_chart:")
 
 st.title("Survey :blue[Sight]")
 st.header("Freetext Survey Feedback Analyzer")
-st.header("Powered by :blue[AI] :robot_face:",divider='rainbow')
+st.header("Powered by :blue[Chat GPT] :robot_face:",divider='rainbow')
 st.write("Upload your freetext survey responses to get a detailed summary of what" 
         " your respondents are saying. No need to read through hundreds "
         "of responses ever again!")
