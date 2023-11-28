@@ -1,11 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Survey Analyzer", page_icon= ":bar_chart:")
+st.set_page_config(page_title="Survey Sight", page_icon= ":bar_chart:")
 
-st.title("Survey Feedback Topic Analyzer")
+st.title("Survey :blue[Sight]")
+st.header("Freetext Survey Feedback Analyzer")
 st.header("Powered by :blue[AI] :robot_face:",divider='rainbow')
-st.write("Upload your freetext survey responses to find out what customers are saying. No need to read through hundreds of responses ever again!!")
+st.write("Upload your freetext survey responses to get a detailed summary of what" 
+        " your respondents are saying. No need to read through hundreds "
+        "of responses ever again!")
 st.write("This only works with Excel or CSV files.")
 st.write("After uploading, you will be able to choose in which column the responses are located.")
 
@@ -66,7 +69,7 @@ if st.button("Submit to begin survey analysis"):
     client = OpenAI(api_key = api_key_user)
 
 
-    def get_completion(prompt, model="gpt-3.5-turbo"):
+    def get_completion(prompt, model="gpt-4-1106-preview"):
         messages = [{"role": "user", "content": prompt}]
         response = client.chat.completions.create(
             model=model,
