@@ -111,7 +111,7 @@ url = 'https://platform.openai.com/'
 api_key_user = st.text_input(label="Note, if you don't have an Open AI API key yet, you can get one [by clicking here](%s)" % url, type="password")
 
 if st.button("Submit to begin survey analysis"):
-    client = OpenAI(api_key = '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')
+    client = OpenAI(api_key = api_key_user)
 
 
     def get_completion(prompt, model="gpt-4"):
