@@ -123,7 +123,7 @@ if st.button("Submit to begin survey analysis"):
         )
         return response.choices[0].message.content
 
-    # some cleaning steps of te df first
+    # some cleaning steps of the df first
 
     # Filter rows where the content is not just one word
     df = df[df[selected_column].str.split().apply(len) > 1]
@@ -186,70 +186,6 @@ if st.button("Submit to begin survey analysis"):
     with st.spinner(f"Analysing {number_of_responses} responses..."):
 
         response = get_completion(prompt)
-    st.success("Analysis Complete!", icon ="🤖")
-    st.write(response)
-    # some cleaning steps of te df first
-
-    # Filter rows where the content is not just one word
-    df = df[df[selected_column].str.split().apply(len) > 1]
-
-    import emoji
-    # Function to remove emojis
-    def remove_emojis(text):
-        return emoji.demojize(text)
-
-    # Apply the function to the 'Responses' column
-    df[selected_column] = df[selected_column].apply(remove_emojis)
-    # final cleaning step. gets rid of ::smiley:: type text
-    df[selected_column] = df[selected_column].str.replace(':[^:]+:', '', regex=True)
-
-
-    # next, get the number of tokens for each response
-    # we don't want to over load GPT. There is a token limit of 8000 currently.
-    # so the data we send to the api should be less than this, by about 1000
-    # which leaves some tokens for the api response
-
-    # token counter
-    import tiktoken
-
-    def num_tokens_from_string(string: str, encoding_name: str) -> int:
-        encoding = tiktoken.encoding_for_model(encoding_name)
-        num_tokens = len(encoding.encode(string))
-        return num_tokens
-
-    # getting count of tokens
-    df['Tokens'] = df.apply(lambda row: num_tokens_from_string(row[selected_column], encoding_name="gpt-4"), axis=1)
-
-    # Shuffle DataFrame to randomize the order
-    df = df.sample(frac=1, random_state=42).reset_index(drop=True)
-
-    # Calculate cumulative tokens
-    df['CumulativeTokens'] = df['Tokens'].cumsum()
-
-    # Select responses within the token limit of 7000
-    selected_responses = df[df['CumulativeTokens'] <= 7000][selected_column].to_list()
-
-    # def createlistfromcolumn(df_column):
-    #     return ["```" + text + "```" for text in df_column if len(text) > 5]
-
-    number_of_responses = len(selected_responses)
-
-    prompt = f"""
-    You will be provided by a list of comments taken from a survey. The person who uploaded the survey data has written a short desrcription of what the survey is about. Here is the context of the survey: {theme}. 
-
-    After reading the context and background to the survey, you will assume the role of an expert in this area. 
-
-    Your goal is to read through the responses and give the following outputs:
-    
-    Positive Comments: Summarise common positive feedback in three sentences or less. Write in sentences, not bullet points. Add a title in bold to this section called "Positive Comments:"
-    Negative Comments: Summarise common negative feedback in three sentences or less.  Write in sentences, not bullet points. Add a title in bold to this section called "Negative Comments:"
-    Sentiment Summary: Give a general summary of sentiment of the overall respondents.  Write in sentences, not bullet points. Add a heatitleder in bold to this section called "Sentiment Summary:"
-    Recommendations.  Give recommendations going forward, while keeping the context in mind.  Write in sentences, not bullet points. Add a heatitleer in bold to this section called "Recommendations:"
-
-    Here is the feedback for you to study: {selected_responses}
-    """
-    with st.spinner(f"Analysing {number_of_responses} responses..."):
-
-        response = get_completion(prompt)
-    st.success("Analysis Complete!", icon ="🤖")
-    st.write(response)
+        st.success("Analysis Complete!", icon ="🤖")
+        st.write(response)
+ 
