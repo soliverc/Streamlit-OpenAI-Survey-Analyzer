@@ -10,15 +10,17 @@ st.write("Upload your freetext survey responses to get a detailed summary of wha
         " your respondents are saying. No need to read through hundreds "
         "of responses ever again!")
 
-st.write("⚠️ This only works with Excel or CSV files. "
-        "Your survey responses should be contained in a"
-         " single column, with one row per response.")
-st.write("📝 Your Excel / CSV file can contain other non related columns too, as we will choose the specific response column after upload.")
-
+#st.markdown("<hr>", unsafe_allow_html=True)
+st.header("💁 **FYI**")
+st.write("This only works with Excel or CSV files.")
+st.write("Your survey responses should be contained in a single column, with one row per response.")
+st.write("Your Excel / CSV file can contain other non related columns too, as we will choose the specific response column after upload.")
+st.write("Due to ChatGPT's limit on the number of words it can process, this app may not be able to analyse all of your responses. (GPT 4 can process twice as many words as GPT 3)")
+st.markdown("<hr>", unsafe_allow_html=True)
 
 st.write("First of all, do you have your own data?")
 
-data = st.radio(options= ["Yes", "No"], label='hello', label_visibility ="hidden")
+data = st.radio(options= ["Yes", "No"], label='hello', label_visibility ="hidden") 
 
 if data == "No":
 
@@ -74,118 +76,138 @@ st.dataframe(df.head())
 st.write("Now please select which column contains the free-text user responses")
 selected_column = st.selectbox(index=None, options = df.columns, label='👇')
 
-@st.cache_data
-def showsample(col):
-    for thing in col.sample(5):
-        st.write("✒️" + thing)
-
 if selected_column:
+
+    @st.cache_data
+    def showsample(col):
+        for thing in col.sample(5):
+            st.write("✒️" + thing)
+
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("Here are five random responses.")
     showsample(df[selected_column])
     st.markdown("<hr>", unsafe_allow_html=True)
 
-st.subheader("We are ready to extract the relevant topics.")
-def getsample(dataframe, samplenum):
-    return dataframe.sample(samplenum)
+    st.subheader("We are ready to extract the relevant topics.")
 
-st.write("Please write a short description of what "
-         "this survey is about. This will aid the model in "
-         "interpreting the results. For example: "
-         "***'These responses are comments from customers "
-         "of a large retail store that sells "
-         "a range of food, electronics and clothing. They were asked "
-         "how customer service could be improved'***")
+    # def getsample(dataframe, samplenum):
+    #     return dataframe.sample(samplenum)
 
-theme = st.text_area(label='👇')
+    st.write("Please write a short description of what "
+            "this survey is about. This will aid the model in "
+            "interpreting the results. For example: "
+            "***'These responses are comments from customers "
+            "of a large retail store that sells "
+            "a range of food, electronics and clothing. They were asked "
+            "how customer service could be improved'***")
 
-# Using the "with" syntax
-# with st.form(key='my_form'):
-# 	theme = st.text_area(label='Enter some text')
-# 	submit_button = st.form_submit_button(label='Submit')
+    theme = st.text_area(label='👇')
 
-from openai import OpenAI
-
-st.write("Please paste your Open AI API Key below. This information is not saved or shared.")
-url = 'https://platform.openai.com/'
-api_key_user = st.text_input(label="Note, if you don't have an Open AI API key yet, you can get one [by clicking here](%s)" % url, type="password")
-
-if st.button("Submit to begin survey analysis"):
-    client = OpenAI(api_key = api_key_user)
+    # Using the "with" syntax
+    # with st.form(key='my_form'):
+    # 	theme = st.text_area(label='Enter some text')
+    # 	submit_button = st.form_submit_button(label='Submit')
 
 
-    def get_completion(prompt, model="gpt-4"):
-        messages = [{"role": "user", "content": prompt}]
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0
-        )
-        return response.choices[0].message.content
+    if theme:
+        st.write("Please paste your Open AI API Key below. This information is not saved or shared.")
+        url = 'https://platform.openai.com/'
+        api_key_user = st.text_input(label="Note, if you don't have an Open AI API key yet, you can get one [by clicking here](%s)" % url, type="password")
 
-    # some cleaning steps of the df first
+        if api_key_user:
+            st.write("Which GPT model would you like to use?")
 
-    # Filter rows where the content is not just one word
-    df = df[df[selected_column].str.split().apply(len) > 1]
+            selected_model = st.selectbox(index=None, options = ['gpt-3.5-turbo','gpt-4'], label='👇')
 
-    import emoji
-    # Function to remove emojis
-    def remove_emojis(text):
-        return emoji.demojize(text)
+            if st.button("Submit to begin survey analysis"):
+                st.write("🚀 Let's get started! 🚀")
 
-    # Apply the function to the 'Responses' column
-    df[selected_column] = df[selected_column].apply(remove_emojis)
-    # final cleaning step. gets rid of ::smiley:: type text
-    df[selected_column] = df[selected_column].str.replace(':[^:]+:', '', regex=True)
+                from openai import OpenAI
+                client = OpenAI(api_key = api_key_user)
 
 
-    # next, get the number of tokens for each response
-    # we don't want to over load GPT. There is a token limit of 8000 currently.
-    # so the data we send to the api should be less than this, by about 1000
-    # which leaves some tokens for the api response
+                def get_completion(prompt, model=selected_model):
+                    messages = [{"role": "user", "content": prompt}]
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=0
+                    )
+                    return response.choices[0].message.content
 
-    # token counter
-    import tiktoken
+                # some cleaning steps of the df first
 
-    def num_tokens_from_string(string: str, encoding_name: str) -> int:
-        encoding = tiktoken.encoding_for_model(encoding_name)
-        num_tokens = len(encoding.encode(string))
-        return num_tokens
+                # Filter rows where the content is not just one word
+                df = df[df[selected_column].str.split().apply(len) > 1]
 
-    # getting count of tokens
-    df['Tokens'] = df.apply(lambda row: num_tokens_from_string(row[selected_column], encoding_name="gpt-4"), axis=1)
+                import emoji
+                # Function to remove emojis
+                def remove_emojis(text):
+                    return emoji.demojize(text)
 
-    # Shuffle DataFrame to randomize the order
-    df = df.sample(frac=1, random_state=42).reset_index(drop=True)
+                # Apply the function to the 'Responses' column
+                df[selected_column] = df[selected_column].apply(remove_emojis)
+                # final cleaning step. gets rid of ::smiley:: type text
+                df[selected_column] = df[selected_column].str.replace(':[^:]+:', '', regex=True)
 
-    # Calculate cumulative tokens
-    df['CumulativeTokens'] = df['Tokens'].cumsum()
 
-    # Select responses within the token limit of 7000
-    selected_responses = df[df['CumulativeTokens'] <= 7000][selected_column].to_list()
+                # next, get the number of tokens for each response
+                # we don't want to over load GPT. There is a token limit of 8000 currently.
+                # so the data we send to the api should be less than this, by about 1000
+                # which leaves some tokens for the api response
 
-    # def createlistfromcolumn(df_column):
-    #     return ["```" + text + "```" for text in df_column if len(text) > 5]
+                # token counter
+                import tiktoken
 
-    number_of_responses = len(selected_responses)
+                def num_tokens_from_string(string: str, encoding_name: str) -> int:
+                    encoding = tiktoken.encoding_for_model(encoding_name)
+                    num_tokens = len(encoding.encode(string))
+                    return num_tokens
 
-    prompt = f"""
-    You will be provided by a list of comments taken from a survey. The person who uploaded the survey data has written a short desrcription of what the survey is about. Here is the context of the survey: {theme}. 
+                # getting count of tokens
+                df['Tokens'] = df.apply(lambda row: num_tokens_from_string(row[selected_column], encoding_name=selected_model), axis=1)
 
-    After reading the context and background to the survey, you will assume the role of an expert in this area. 
+                # Shuffle DataFrame to randomize the order
+                df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
-    Your goal is to read through the responses and give the following outputs:
-    
-    Positive Comments: Summarise common positive feedback in three sentences or less. Write in sentences, not bullet points. Add a title in bold to this section called "Positive Comments:"
-    Negative Comments: Summarise common negative feedback in three sentences or less.  Write in sentences, not bullet points. Add a title in bold to this section called "Negative Comments:"
-    Sentiment Summary: Give a general summary of sentiment of the overall respondents.  Write in sentences, not bullet points. Add a heatitleder in bold to this section called "Sentiment Summary:"
-    Recommendations.  Give recommendations going forward, while keeping the context in mind.  Write in sentences, not bullet points. Add a heatitleer in bold to this section called "Recommendations:"
+                # Calculate cumulative tokens
+                df['CumulativeTokens'] = df['Tokens'].cumsum()
 
-    Here is the feedback for you to study: {selected_responses}
-    """
-    with st.spinner(f"Analysing {number_of_responses} responses..."):
+                # depending on the model:
+                if selected_model == 'gpt-3.5-turbo':
+                    limit = 3500
+                else:
+                    limit = 7000
 
-        response = get_completion(prompt)
-        st.success("Analysis Complete!", icon ="🤖")
-        st.write(response)
- 
+                # Select responses within the token limit of 7000
+                selected_responses = df[df['CumulativeTokens'] <= limit][selected_column].to_list()
+
+                # def createlistfromcolumn(df_column):
+                #     return ["```" + text + "```" for text in df_column if len(text) > 5]
+
+                number_of_responses = len(selected_responses)
+                pcent_of_analysed_responses = round(number_of_responses/df.shape[0]*100)
+
+                prompt = f"""
+                You will be provided by a list of comments taken from a survey. The person who uploaded the survey data has written a short desrcription of what the survey is about. Here is the context of the survey: {theme}. 
+
+                After reading the context and background to the survey, you will assume the role of an expert in this area. 
+
+                Your goal is to read through the responses and give the following outputs:
+                
+                Positive Comments: Summarise common positive feedback in three sentences or less. Write in sentences, not bullet points. Add a title in bold to this section called "Positive Comments:"
+                Negative Comments: Summarise common negative feedback in three sentences or less.  Write in sentences, not bullet points. Add a title in bold to this section called "Negative Comments:"
+                Sentiment Summary: Give a general summary of sentiment of the overall respondents.  Write in sentences, not bullet points. Add a heatitleder in bold to this section called "Sentiment Summary:"
+                Recommendations.  Give recommendations going forward, while keeping the context in mind.  Write in sentences, not bullet points. Add a heatitleer in bold to this section called "Recommendations:"
+
+                Here is the feedback for you to study: {selected_responses}
+                """
+                with st.spinner(f"Analysing {number_of_responses} responses. {pcent_of_analysed_responses}% of the total responses. Please wait..."):
+
+                    response = get_completion(prompt)
+                    st.success("Analysis Complete!", icon ="🤖")
+                    st.write(response)
+            
+                    st.markdown("<hr>", unsafe_allow_html=True)
+                    st.subheader("Please press your browser refresh button 🔄 if you would like to clear all outputs and start again.")
+                    st.markdown("<hr>", unsafe_allow_html=True)
